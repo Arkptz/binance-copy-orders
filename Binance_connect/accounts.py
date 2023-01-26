@@ -177,13 +177,13 @@ class Account_1Lvl:
     api_key: str
     secret: str
     account_2lvls: list[Account_2Lvl]
-    ws_client: CMFuturesWebsocketClient = CMFuturesWebsocketClient(
-        stream_url='wss://stream.binancefuture.com')  # stream_url='wss://fstream.binance.com')
+    ws_client: CMFuturesWebsocketClient = CMFuturesWebsocketClient()
+        #stream_url='wss://stream.binancefuture.com')
 
     def inizialize(self) -> None:
         os.environ['SSL_CERT_FILE'] = SSL_CERT_FILE
         config_logging(logging, logging.DEBUG,
-                       log_file=log_path + self.name_account)
+                       log_file=log_path + self.name_account+'.log')
         self.client = Client(self.api_key, secret=self.secret,)
                              #base_url='https://testnet.binancefuture.com')
         send_log_thr(
@@ -273,6 +273,7 @@ class Account_1Lvl:
             logging.error(traceback.format_exc())
             pass
 
+    @catch_eroor
     def start_polling(self):
         self.ws_client.start()
         self.ws_client.user_data(listen_key=self.listen_key,
