@@ -43,7 +43,7 @@ async def Bot_on(cq: CallbackQuery):
 async def Bot_on(cq: CallbackQuery):
     msg = cq.message
     user_id = msg.chat.id
-    list_vals = proc_list.keys()
+    list_vals = list(proc_list.keys())
     for i in list_vals:
         send_log_thr(f'{i} -- Выключение процесса')
         proc_list[i].kill()
