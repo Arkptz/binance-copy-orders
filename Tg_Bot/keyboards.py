@@ -77,7 +77,7 @@ class Keyboards:
         end = start+self.butt_on_page
         try:
             accs = SessionDb.query(AccountsDb).filter(
-                AccountsDb.account != None).all()
+                AccountsDb.account != None and AccountsDb.user_id == user_id).all()
         except:
             accs = []
         select_accs = accs[start:end]
