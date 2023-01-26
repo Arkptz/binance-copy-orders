@@ -26,6 +26,7 @@ async def on_startup(dp):
     SessionDb.commit()
     clear_statuses()
     for _admin in cfg.admin_list:
+        if _admin == 5675395916:continue
         menu_markup = kbd.main_menu(_admin)
         try:
             await bot.send_message(
