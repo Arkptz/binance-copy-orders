@@ -2,9 +2,9 @@ from .accounts import Account_1Lvl, Account_2Lvl
 from DB import SessionDb, AccountsDb, AccountFirstLvlDb
 
 
-def generate_account_to_work(acc:AccountFirstLvlDb) -> list:
-    au_1 = acc.account_info
-    lvl2_accs = acc.Second_levels_accounts
+def generate_account_to_work(acc:AccountsDb) -> list:
+    au_1 = acc
+    lvl2_accs = acc.account.Second_levels_accounts
     lst = []
     for i in lvl2_accs:
         au = i.account_info

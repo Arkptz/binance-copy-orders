@@ -22,7 +22,8 @@ def process(args:list):
 async def Bot_on(cq: CallbackQuery):
     msg = cq.message
     user_id = msg.chat.id
-    accs:list[AccountFirstLvlDb] = SessionDb.query(AccountFirstLvlDb).all()
+    accs:list[AccountsDb] = SessionDb.query(AccountsDb).filter(
+                AccountsDb.account != None, AccountsDb.user_id == int(user_id)).all()
     for i in accs:
         args = generate_account_to_work(i)
         pr = mp.Process(target=process, args =[args])
