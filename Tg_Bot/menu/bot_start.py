@@ -43,8 +43,8 @@ async def Bot_on(cq: CallbackQuery):
 async def Bot_on(cq: CallbackQuery):
     msg = cq.message
     user_id = msg.chat.id
-    copy_proc_dict = proc_list.__deepcopy__()
-    for i in copy_proc_dict:
+    list_vals = proc_list.keys()
+    for i in list_vals:
         send_log_thr(f'{i} -- Выключение процесса')
         proc_list[i].kill()
         del proc_list[i]
