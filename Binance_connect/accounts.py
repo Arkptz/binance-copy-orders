@@ -21,8 +21,9 @@ class Account_2Lvl:
     multiplicator: float = 1
 
     def __post_init__(self) -> None:
-        self.client = Client(self.api_key, self.secret,
-                             base_url='https://testnet.binancefuture.com')  # base_url="https://fapi.binance.com")
+        self.client = Client(self.api_key, self.secret,)
+                             #base_url='https://testnet.binancefuture.com')  # 
+                             #base_url="https://fapi.binance.com")
         send_log_thr(
             f'Инициализация аккаунта {self.name_account} 2 уровня прошла успешно ')
 
@@ -183,8 +184,8 @@ class Account_1Lvl:
         os.environ['SSL_CERT_FILE'] = SSL_CERT_FILE
         config_logging(logging, logging.DEBUG,
                        log_file=log_path + self.name_account)
-        self.client = Client(self.api_key, secret=self.secret,
-                             base_url='https://testnet.binancefuture.com')
+        self.client = Client(self.api_key, secret=self.secret,)
+                             #base_url='https://testnet.binancefuture.com')
         send_log_thr(
             f'Инициализация аккаунта {self.name_account} 1 уровня прошла успешно ')
         self.listen_key = self.client.new_listen_key()["listenKey"]
