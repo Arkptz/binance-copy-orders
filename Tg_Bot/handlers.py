@@ -1,13 +1,14 @@
 from aiogram.types import Message
 from aiogram.dispatcher import FSMContext
 from aiogram.types import Message, CallbackQuery
-from loguru import logger as log
 from .bot import dp, bot
 from DB import SessionDb, AdminDb, clear_statuses
 import config as cfg
 from .keyboards import kbd
 from .decors import admin
 from .states import Select_account, AddExpenditure
+import requests
+import logging as log
 
 
 
@@ -47,6 +48,19 @@ async def admin_menu(msg: Message):
         text='<b>Главное меню:</b>',
         reply_markup=menu_markup
     )
+
+def send_log(text):
+    url = f'https://api.telegram.org/bot{cfg.BOT_TOKEN}/sendMessage'
+    data = {'chat_id': cfg.channel_id,
+            'text': text,
+            'parse_mode': 'HTML'}
+    for i in range(3):
+        try:
+            resp = requests.post(url, data=data)
+            log.debug(f'отправка логов в тг: {resp.text}')
+            break
+        except:
+            pass
 
 
 async def back_to_menu(cq: CallbackQuery, txt=''):

@@ -111,6 +111,23 @@ class OrderTypes:
     STOP = 'STOP'
 
 
+class PositionModes(BaseModel):
+    symbol:str
+    positionAmt:float
+    entryPrice:float
+    markPrice:float
+    unRealizedProfit:float
+    liquidationPrice:float
+    leverage:int
+    maxNotionalValue:int
+    marginType:str
+    isolatedMargin:float
+    isAutoAddMargin:bool
+    positionSide:str
+    notional:float
+    isolatedWallet:float
+    updateTime:int
+
 class EventTypes:
     ORDER_TRADE_UPDATE = "ORDER_TRADE_UPDATE"
     ACCOUNT_CONFIG_UPDATE = 'ACCOUNT_CONFIG_UPDATE'

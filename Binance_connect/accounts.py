@@ -7,41 +7,43 @@ from dataclasses import dataclass
 import logging
 import os
 from .classes import *
-from .decors import catch_eroor
+from .decors import catch_eroor, send_log_thr
 from DB import SessionDb, ClientOrderIdAssociationDb
-from config import log_path, SSL_CERT_FILE, trade_pair
+from config import log_path, SSL_CERT_FILE
 from threading import Thread
-
-
-
 
 
 @dataclass
 class Account_2Lvl:
-    name_account:str
+    name_account: str
     api_key: str
     secret: str
     multiplicator: float = 1
 
     def __post_init__(self) -> None:
         self.client = Client(self.api_key, self.secret,
-                             base_url='https://testnet.binancefuture.com')#base_url="https://fapi.binance.com")
+                             base_url='https://testnet.binancefuture.com')  # base_url="https://fapi.binance.com")
+        send_log_thr(
+            f'Инициализация аккаунта {self.name_account} 2 уровня прошла успешно ')
 
     @catch_eroor
     def new_order(self, order: Order):
-        need_sp = [OrderTypes.TAKE_PROFIT_MARKET, OrderTypes.STOP_MARKET, OrderTypes.TAKE_PROFIT]
-        kwargs = {'symbol':order.s,
-            'side':order.S,
-            'type':order.o,
-            'quantity':round(order.q * self.multiplicator,3),}
+        need_sp = [OrderTypes.TAKE_PROFIT_MARKET,
+                   OrderTypes.STOP_MARKET, OrderTypes.TAKE_PROFIT]
+        kwargs = {'symbol': order.s,
+                  'side': order.S,
+                  'type': order.o,
+                  'quantity': round(order.q * self.multiplicator, 3), }
         if order.R:
             kwargs['reduceOnly'] = True
+        if order.ps:
+            kwargs['positionSide'] = order.ps
         if not order.o in [OrderTypes.MARKET] + need_sp:
             kwargs['price'] = order.p
             kwargs['timeInForce'] = 'GTC'
         if order.o in need_sp + [OrderTypes.STOP]:
             kwargs['stopPrice'] = order.sp
-            kwargs['quantity'] = round(order.q * self.multiplicator,3)
+            kwargs['quantity'] = round(order.q * self.multiplicator, 3)
             if 'reduceOnly' in kwargs:
                 del kwargs['reduceOnly']
         if order.cp:
@@ -52,7 +54,10 @@ class Account_2Lvl:
         kwargs['workingType'] = order.wt
         response = self.client.new_order(**kwargs)
         open_order = OpenOrder(**response)
-        ass = ClientOrderIdAssociationDb(lvl_1=order.i, lvl_2=open_order.orderId)
+        send_log_thr(
+            f'{self.name_account} -- Успешно открыли новый ордер {order.o}: {open_order}')
+        ass = ClientOrderIdAssociationDb(
+            lvl_1=order.i, lvl_2=open_order.orderId)
         SessionDb.add(ass)
         SessionDb.commit()
         logging.info(response)
@@ -75,20 +80,51 @@ class Account_2Lvl:
         return ans
 
     @catch_eroor
+    def change_margin_type(self, mg_type: str, symbol: str):
+        if mg_type == 'cross':
+            mg_type = 'CROSSED'
+        elif mg_type == 'isolated':
+            mg_type == 'ISOLATED'
+        self.client.change_margin_type(symbol=symbol, marginType=mg_type)
+        send_log_thr(
+            f'{self.name_account} -- Успешно поставили margin_type: {mg_type}')
+
+    @catch_eroor
     def change_leverage(self, config: ChangeLeverage) -> dict:
         response = self.client.change_leverage(
             symbol=config.s,
             leverage=config.l,
             recvWindow=6000
         )
+        send_log_thr(
+            f'{self.name_account} -- Успешно поставили плечо на {config.s}: {config.l}')
         return response
 
+    @catch_eroor
+    def get_position_risk(self) -> list[PositionModes]:
+        response = self.client.get_position_risk()
+        response = [PositionModes(**i) for i in response]
+        return response
+
+    @catch_eroor
+    def check_position_risk(self, cf_original: dict[str, PositionModes]):
+        this_posR = self.get_position_risk()
+        for symb in this_posR:
+            lvl1_posR = cf_original[symb.symbol]
+            if symb.leverage != lvl1_posR.leverage:
+                self.change_leverage(ChangeLeverage(
+                    s=symb.symbol, l=lvl1_posR.leverage))
+            elif symb.marginType != lvl1_posR.marginType:
+                self.change_margin_type(
+                    lvl1_posR.marginType, symbol=symb.symbol)
 
     @catch_eroor
     def change_multi_asset_mode(self, config: ChangeConfiguration) -> dict:
         response = self.client.change_multi_asset_mode(
             multiAssetsMargin=f'{config.j}'
         )
+        send_log_thr(
+            f"{self.name_account} -- Успешно {'включили' if config.j else 'выключили'} multi_asset_mode")
         return response
 
     @catch_eroor
@@ -97,6 +133,8 @@ class Account_2Lvl:
             dualSidePosition=dualSidePosition,
             recvWindow=2000
         )
+        send_log_thr(
+            f"{self.name_account} -- Успешно {'включили' if dualSidePosition else 'выключили'} dualSidePosition")
         return response
 
     @catch_eroor
@@ -106,24 +144,31 @@ class Account_2Lvl:
         if order.i in ass_dct:
             ordId = ass_dct[order.i]
             logging.info(f'Closing order with orderId = {ordId}')
+            # send_log_thr(f'{self.name_account} -- Закрываем ордер с orderId = {ordId}')
             response = self.client.cancel_order(
                 symbol=order.s,
                 orderId=ordId,
                 recvWindow=2000
             )
             logging.info(response)
-            cl = SessionDb.query(ClientOrderIdAssociationDb).filter(ClientOrderIdAssociationDb.lvl_1 == order.i).first()
+            send_log_thr(
+                f'{self.name_account} -- Успешно закрыли ордер с orderId = {ordId}')
+            cl = SessionDb.query(ClientOrderIdAssociationDb).filter(
+                ClientOrderIdAssociationDb.lvl_1 == order.i).first()
             SessionDb.delete(cl)
             SessionDb.commit()
         else:
+            txt = f'{self.name_account} -- {order} - Отсутсвует подходящий ордер для закрытия'
             logging.error(
                 f'{order} - Bd association not have current order')
+            send_log_thr(txt)
 
     def copy_order(self, order: Order):
         if order.x == ExecutioTypes.NEW:
             self.new_order(order)
         elif order.x == ExecutioTypes.CANCELED:
             self.cancel_order(order)
+
 
 @dataclass
 class Account_1Lvl:
@@ -132,38 +177,72 @@ class Account_1Lvl:
     secret: str
     account_2lvls: list[Account_2Lvl]
     ws_client: CMFuturesWebsocketClient = CMFuturesWebsocketClient(
-        stream_url='wss://stream.binancefuture.com')#stream_url='wss://fstream.binance.com')
+        stream_url='wss://stream.binancefuture.com')  # stream_url='wss://fstream.binance.com')
 
     def inizialize(self) -> None:
         os.environ['SSL_CERT_FILE'] = SSL_CERT_FILE
         config_logging(logging, logging.DEBUG,
                        log_file=log_path + self.name_account)
-        self.client = Client(self.api_key, secret=self.secret,base_url='https://testnet.binancefuture.com')
+        self.client = Client(self.api_key, secret=self.secret,
+                             base_url='https://testnet.binancefuture.com')
+        send_log_thr(
+            f'Инициализация аккаунта {self.name_account} 1 уровня прошла успешно ')
         self.listen_key = self.client.new_listen_key()["listenKey"]
-        self.check_position_mode()
-        self.check_multi_asset_mode()
+        send_log_thr(f'{self.name_account} -- Получен ключ для вебсокета')
+        self.start_checks()
 
+    def start_checks(self):
+        send_log_thr(f'{self.name_account} -- Начинаю сверку position_mode')
+        pos_mode = self.check_position_mode()
+        send_log_thr(f'{self.name_account} -- Начинаю сверку multi_asset_mode')
+        mam = self.check_multi_asset_mode()
+        send_log_thr(
+            f'{self.name_account} -- Начинаю сверку margin_type and leverage')
+        pr = self.check_position_risk()
+        self.wait_threads(pos_mode)
+        send_log_thr(
+            f'{self.name_account} -- Сверка position_mode - закончена')
+        self.wait_threads(mam)
+        send_log_thr(
+            f'{self.name_account} -- Сверка multi_asset_mode - закончена')
+        self.wait_threads(pr)
+        send_log_thr(
+            f'{self.name_account} -- Сверка margin_type and leverage - закончена')
+
+    @catch_eroor
+    def check_position_risk(self):
+        response = self.client.get_position_risk()
+        response = [PositionModes(**i) for i in response]
+        response = {i.symbol: i for i in response}
+        return self.copy('check_position_risk', args=[response])
+
+    def wait_threads(self, lst: list[Thread]):
+        for i in lst:
+            i.join()
 
     @catch_eroor
     def check_position_mode(self):
         response = self.client.get_position_mode(recvWindow=2000)
         mode = response['dualSidePosition']
         logging.info(f'1lvl - position mode - {response}')
-        self.copy('change_pos_mode', [mode])
+        return self.copy('change_pos_mode', [mode])
 
     @catch_eroor
     def check_multi_asset_mode(self):
         response = self.client.get_multi_asset_mode(recvWindow=2000)
         mode = response['multiAssetsMargin']
         logging.info(f'1lvl - multi_asset_mode - {response}')
-        self.copy('change_multi_asset_mode', [ChangeConfiguration(j=mode)])
-
+        return self.copy('change_multi_asset_mode', [ChangeConfiguration(j=mode)])
 
     @catch_eroor
-    def copy(self, name_func:str, args:list):
+    def copy(self, name_func: str, args: list):
+        thread_list = []
         for i in self.account_2lvls:
             func = getattr(i, name_func)
-            Thread(target=func, args=args).start()
+            t = Thread(target=func, args=args)
+            t.start()
+            thread_list.append(t)
+        return thread_list
 
     def _handler(self, message):
         txt = f'Callback____ {message}'
@@ -174,14 +253,21 @@ class Account_1Lvl:
                 event_type = message['e']
                 if event_type == EventTypes.ORDER_TRADE_UPDATE:
                     otp = ORDER_TRADE_UPDATE(**message)
-                    Thread(target = self.copy, args =['copy_order', [otp.o]]).start()
+                    send_log_thr(
+                        f'{self.name_account} -- получен новый ордер: {otp}')
+                    Thread(target=self.copy, args=[
+                           'copy_order', [otp.o]]).start()
                     logging.debug(otp)
                 elif event_type == EventTypes.ACCOUNT_CONFIG_UPDATE:
                     acu = ACCOUNT_CONFIG_UPDATE(**message)
+                    send_log_thr(
+                        f'{self.name_account} -- получен новый апдейт конфига: {acu}')
                     if acu.ac:
-                        Thread(target = self.copy, args =['change_leverage', [acu.ac]]).start()
+                        Thread(target=self.copy, args=[
+                               'change_leverage', [acu.ac]]).start()
                     elif acu.ai:
-                        Thread(target = self.copy, args =['change_multi_asset_mode', [acu.ai]]).start()
+                        Thread(target=self.copy, args=[
+                               'change_multi_asset_mode', [acu.ai]]).start()
         except:
             logging.error(traceback.format_exc())
             pass
@@ -191,3 +277,4 @@ class Account_1Lvl:
         self.ws_client.user_data(listen_key=self.listen_key,
                                  id=1,
                                  callback=self._handler)
+        send_log_thr(f'{self.name_account} -- Запуск вебсокета...')
