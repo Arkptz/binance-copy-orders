@@ -77,8 +77,9 @@ class Keyboards:
         end = start+self.butt_on_page
         try:
             accs = SessionDb.query(AccountsDb).filter(
-                AccountsDb.account != None and AccountsDb.user_id == user_id).all()
-        except:
+                AccountsDb.account != None, AccountsDb.user_id == int(user_id)).all()
+        except Exception as e:
+            print(e)
             accs = []
         select_accs = accs[start:end]
         next_page = accs[end:end+self.butt_on_page]
