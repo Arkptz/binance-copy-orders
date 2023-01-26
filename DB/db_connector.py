@@ -20,13 +20,13 @@ def clear_statuses():
             SessionDb.query(BotStatusDb).filter(BotStatusDb.status == True and BotStatusDb.user_id == ui).update({BotStatusDb.status: False})
         SessionDb.commit()
 
-for i in range(10):
-    acc = AccountsDb(user_id = 1021524873, name_account=f'test_par{i}{i}', api_key='3323', api_secret='44343', account = AccountFirstLvlDb())
-    SessionDb.add(acc)
-    SessionDb.commit()
-    ch = AccountsDb(user_id = 1021524873, name_account=f'test_chi{i}{i}', api_key='3323', api_secret='44343', account_2lvl = AccountSecondLvlDb(parent_id=acc.id))
-    SessionDb.add(ch)
-    SessionDb.commit()
+# for i in range(10):
+#     acc = AccountsDb(user_id = 1021524873, name_account=f'test_par{i}{i}', api_key='3323', api_secret='44343', account = AccountFirstLvlDb())
+#     SessionDb.add(acc)
+#     SessionDb.commit()
+#     ch = AccountsDb(user_id = 1021524873, name_account=f'test_chi{i}{i}', api_key='3323', api_secret='44343', account_2lvl = AccountSecondLvlDb(parent_id=acc.id))
+#     SessionDb.add(ch)
+#     SessionDb.commit()
 # ac = SessionDb.get(AccountFirstLvlDb, 1)
 # print(ac)
 # print(ac.Second_levels_accounts)

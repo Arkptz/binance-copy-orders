@@ -5,11 +5,10 @@ from loguru import logger as log
 from .bot import dp, bot
 from DB import SessionDb, AdminDb, clear_statuses
 import config as cfg
-from .keyboards import Keyboards
+from .keyboards import kbd
 from .decors import admin
 from .states import Select_account, AddExpenditure
 
-kbd = Keyboards()
 
 
 async def on_startup(dp):
@@ -50,19 +49,26 @@ async def admin_menu(msg: Message):
     )
 
 
-async def back_to_menu(cq: CallbackQuery):
+async def back_to_menu(cq: CallbackQuery, txt=''):
     msg = cq.message
     user_id = msg.chat.id
     menu_markup = kbd.main_menu(user_id)
     await bot.edit_message_text(
         chat_id=user_id,
         message_id=msg.message_id,
-        text='<b>Главное меню:</b>',
+        text=txt + '<b>Главное меню:</b>',
         reply_markup=menu_markup
     )
 
 states = [Select_account.account_id_1lvl,
           Select_account.account_id_2lvl,
+          Select_account.account_1lvl_menu,
+          Select_account.account_2lvl_menu,
+          Select_account.new_api_key,
+          Select_account.new_api_secret,
+          Select_account.new_name,
+          Select_account.new_account,
+          Select_account.new_multiplicator,
           AddExpenditure.count,
           AddExpenditure.price,
           AddExpenditure.product,

@@ -27,7 +27,7 @@ class AccountFirstLvlDb(Base):
     account_info: Mapped["AccountsDb"] = relationship(back_populates="account", cascade="all, delete-orphan", single_parent=True)
 
     Second_levels_accounts: Mapped[list["AccountSecondLvlDb"]] = relationship(
-        back_populates="first_level", cascade="all"
+        back_populates="first_level", cascade="all, delete"
     )
     def __repr__(self) -> str:
         ai = self.account_info
@@ -39,11 +39,10 @@ class AccountSecondLvlDb(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     parent_id: Mapped[int] = mapped_column(ForeignKey('AccountFirstLvl.account_id'))
     account_id: Mapped[int] = mapped_column(ForeignKey('Accounts.id'))
+    multiplicator: Mapped[float]  = mapped_column()
     account_info: Mapped["AccountsDb"] = relationship(back_populates="account_2lvl", cascade="all, delete-orphan", single_parent=True)
-
-
     first_level: Mapped["AccountFirstLvlDb"] = relationship(
-        back_populates="Second_levels_accounts", cascade="all, delete-orphan", single_parent=True, order_by=AccountFirstLvlDb.account_id)
+        back_populates="Second_levels_accounts", single_parent=True, order_by=AccountFirstLvlDb.account_id)
 
     def __repr__(self) -> str:
         ai = self.account_info
@@ -57,8 +56,8 @@ class AccountsDb(Base):
     api_key: Mapped[str] = mapped_column()
     api_secret: Mapped[str] = mapped_column()
 
-    account: Mapped["AccountFirstLvlDb"] = relationship(back_populates="account_info", order_by=AccountFirstLvlDb.account_id)
-    account_2lvl: Mapped["AccountSecondLvlDb"] = relationship(back_populates="account_info", order_by=AccountSecondLvlDb.account_id)
+    account: Mapped["AccountFirstLvlDb"] = relationship(back_populates="account_info", order_by=AccountFirstLvlDb.account_id, cascade="all, delete-orphan")
+    account_2lvl: Mapped["AccountSecondLvlDb"] = relationship(back_populates="account_info", order_by=AccountSecondLvlDb.account_id, cascade="all, delete-orphan")
 
 
 class BotStatusDb(Base):
@@ -66,3 +65,10 @@ class BotStatusDb(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column()
     status: Mapped[bool] = mapped_column()
+
+
+class ClientOrderIdAssociationDb(Base):
+    __tablename__ = "ClientOrderIdAssociation"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    lvl_1: Mapped[int] = mapped_column()
+    lvl_2: Mapped[int] = mapped_column()

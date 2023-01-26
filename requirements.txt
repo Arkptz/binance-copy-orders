@@ -1,1 +1,4 @@
 binance-futures-connector
+aiogram
+pydantic
+sqlalchemy - pre

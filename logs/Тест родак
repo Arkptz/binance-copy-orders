@@ -1,0 +1,8 @@
+DEBUG:root:url: https://fapi.binance.com/fapi/v1/listenKey
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): fapi.binance.com:443
+DEBUG:urllib3.connectionpool:https://fapi.binance.com:443 "POST /fapi/v1/listenKey HTTP/1.1" 401 46
+DEBUG:root:raw response from server:{"code":-2014,"msg":"API-key format invalid."}
+DEBUG:root:url: https://fapi.binance.com/fapi/v1/listenKey
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): fapi.binance.com:443
+DEBUG:urllib3.connectionpool:https://fapi.binance.com:443 "POST /fapi/v1/listenKey HTTP/1.1" 401 46
+DEBUG:root:raw response from server:{"code":-2014,"msg":"API-key format invalid."}

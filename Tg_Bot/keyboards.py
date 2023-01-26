@@ -17,6 +17,34 @@ class Keyboards:
         markup.insert(self.btn_back_to_menu)
         return markup
 
+    def back_with_back_to_menu(self, back_ref=''):
+        markup = InlineKeyboardMarkup(row_width=1)
+        markup.row(InlineKeyboardButton(
+            text='⬅️Назад', callback_data=back_ref))
+        markup.insert(self.btn_back_to_menu)
+        return markup
+
+    def account_markup(self, lvl1=True, back_ref='//'):
+        markup = InlineKeyboardMarkup(row_width=2)
+        markup.insert(InlineKeyboardButton(
+            text='⚒Поменять api_key', callback_data='replace_api_key'))
+        markup.insert(InlineKeyboardButton(
+            text='⚒Поменять api_secret', callback_data='replace_api_secret'))
+        markup.insert(InlineKeyboardButton(
+            text='⚒Поменять имя аккаунта', callback_data='replace_name'))
+        if lvl1:
+            markup.row(InlineKeyboardButton(
+                text='Посмотреть аккаунты, на которые копируем', callback_data='view_2lvl_accounts'))
+        else:
+            markup.insert(InlineKeyboardButton(
+                text='⚒Поменять мультипликатор', callback_data='replace_multiplicator'))
+        markup.row(InlineKeyboardButton(
+            text='❌Удалить', callback_data='delete_account'))
+        markup.row(InlineKeyboardButton(
+            text='⬅️Назад', callback_data=back_ref))
+        markup.row(self.btn_back_to_menu)
+        return markup
+
     def main_menu(self, user_id: int):
         markup = InlineKeyboardMarkup(row_width=1)
         markup.insert(InlineKeyboardButton(
@@ -48,13 +76,12 @@ class Keyboards:
         start = page * 20
         end = start+self.butt_on_page
         try:
-            select_accs: list[AccountsDb] = SessionDb.query(AccountsDb).filter(
+            accs = SessionDb.query(AccountsDb).filter(
                 AccountsDb.account != None).all()
         except:
-            import traceback
-            traceback.print_exc()
-            select_accs = []
-        next_page = select_accs[end:end+self.butt_on_page]
+            accs = []
+        select_accs = accs[start:end]
+        next_page = accs[end:end+self.butt_on_page]
         for account in select_accs:
             markup.insert(InlineKeyboardButton(text=account.name_account,
                           callback_data=f'select_account_1lvl_{account.id}'))
@@ -79,9 +106,10 @@ class Keyboards:
         markup = InlineKeyboardMarkup(row_width=2)
         start = page * 20
         end = start+self.butt_on_page
-        select_accs: list[AccountSecondLvlDb] = SessionDb.query(
-            AccountSecondLvlDb).filter(AccountSecondLvlDb.parent_id == account_1lvl_id).all()
-        next_page = select_accs[end:end+self.butt_on_page]
+        accs: AccountsDb = SessionDb.get(AccountsDb, account_1lvl_id)
+        accs = accs.account.Second_levels_accounts
+        select_accs = accs[start:end]
+        next_page = accs[end:end+self.butt_on_page]
         for account in select_accs:
             markup.insert(InlineKeyboardButton(text=account.account_info.name_account,
                           callback_data=f'select_account_2lvl_{account.account_id}'))
