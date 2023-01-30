@@ -11,7 +11,7 @@ from .decors import catch_eroor, send_log_thr
 from DB import SessionDb, ClientOrderIdAssociationDb
 from config import log_path, SSL_CERT_FILE
 from threading import Thread
-
+from time import sleep
 
 @dataclass
 class Account_2Lvl:
@@ -279,4 +279,5 @@ class Account_1Lvl:
         self.ws_client.user_data(listen_key=self.listen_key,
                                  id=1,
                                  callback=self._handler)
+        sleep(5)
         send_log_thr(f'{self.name_account} -- Запуск вебсокета...')
