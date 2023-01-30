@@ -182,6 +182,7 @@ class Account_1Lvl:
 
     def inizialize(self) -> None:
         os.environ['SSL_CERT_FILE'] = SSL_CERT_FILE
+        print(log_path + self.name_account+'.log')
         config_logging(logging, logging.DEBUG,
                        log_file=log_path + self.name_account+'.log')
         self.client = Client(self.api_key, secret=self.secret,)
@@ -280,4 +281,5 @@ class Account_1Lvl:
                                  id=1,
                                  callback=self._handler)
         sleep(5)
+        logging.debug('statup')
         send_log_thr(f'{self.name_account} -- Запуск вебсокета...')
