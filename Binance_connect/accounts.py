@@ -185,6 +185,11 @@ class Account_1Lvl:
         print(log_path + self.name_account+'.log')
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
+            datefmt="%d/%b/%Y %H:%M:%S",
+            stream=log_path + self.name_account+'.log')
         config_logging(logging, logging.DEBUG,
                        log_file=log_path + self.name_account+'.log')
         self.client = Client(self.api_key, secret=self.secret,)
