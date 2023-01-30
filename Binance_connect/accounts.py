@@ -192,6 +192,7 @@ class Account_1Lvl:
             stream=log_path + self.name_account+'.log')
         config_logging(logging, logging.DEBUG,
                        log_file=log_path + self.name_account+'.log')
+        logging.debug('test')
         raise
         self.client = Client(self.api_key, secret=self.secret,)
                              #base_url='https://testnet.binancefuture.com')
