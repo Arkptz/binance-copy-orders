@@ -190,8 +190,8 @@ class Account_1Lvl:
             format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
             datefmt="%d/%b/%Y %H:%M:%S",
             filename=log_path + self.name_account+'.log', filemode='a')
-        config_logging(logging, logging.DEBUG,
-                       log_file=log_path + self.name_account+'.log')
+        # config_logging(logging, logging.DEBUG,
+        #                log_file=log_path + self.name_account+'.log')
         logging.debug('test')
         raise
         self.client = Client(self.api_key, secret=self.secret,)
