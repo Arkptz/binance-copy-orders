@@ -192,8 +192,6 @@ class Account_1Lvl:
             filename=log_path + self.name_account+'.log', filemode='a')
         # config_logging(logging, logging.DEBUG,
         #                log_file=log_path + self.name_account+'.log')
-        logging.debug('test')
-        raise
         self.client = Client(self.api_key, secret=self.secret,)
                              #base_url='https://testnet.binancefuture.com')
         send_log_thr(
