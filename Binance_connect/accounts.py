@@ -183,6 +183,8 @@ class Account_1Lvl:
     def inizialize(self) -> None:
         os.environ['SSL_CERT_FILE'] = SSL_CERT_FILE
         print(log_path + self.name_account+'.log')
+        for handler in logging.root.handlers[:]:
+            logging.root.removeHandler(handler)
         config_logging(logging, logging.DEBUG,
                        log_file=log_path + self.name_account+'.log')
         self.client = Client(self.api_key, secret=self.secret,)
