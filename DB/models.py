@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import func
 from config import db_path
 
-engine = create_engine(f'sqlite:///{db_path}', echo=True,
+engine = create_engine(f'sqlite:///{db_path}', echo=False,
                        connect_args={"check_same_thread": False})
 conn = engine.connect()
 
