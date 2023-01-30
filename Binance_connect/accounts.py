@@ -189,7 +189,7 @@ class Account_1Lvl:
             level=logging.DEBUG,
             format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
             datefmt="%d/%b/%Y %H:%M:%S",
-            stream=log_path + self.name_account+'.log')
+            filename=log_path + self.name_account+'.log', filemode='a')
         config_logging(logging, logging.DEBUG,
                        log_file=log_path + self.name_account+'.log')
         logging.debug('test')
