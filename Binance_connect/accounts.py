@@ -177,7 +177,7 @@ class Account_1Lvl:
     api_key: str
     secret: str
     account_2lvls: list[Account_2Lvl]
-    ws_client: CMFuturesWebsocketClient = CMFuturesWebsocketClient()
+    ws_client: CMFuturesWebsocketClient = CMFuturesWebsocketClient(stream_url='wss://fstream.binance.com')
         #stream_url='wss://stream.binancefuture.com')
 
     def inizialize(self) -> None:
