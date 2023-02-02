@@ -72,3 +72,10 @@ class ClientOrderIdAssociationDb(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     lvl_1: Mapped[int] = mapped_column()
     lvl_2: Mapped[int] = mapped_column()
+
+
+# class LastMsgIdDb(Base):
+#     __tablename__ = "Last_msg_id"
+#     id: Mapped[int] = mapped_column(primary_key=True)
+#     user_id: Mapped[int] = mapped_column()
+#     message_id: Mapped[int] = mapped_column()

@@ -19,7 +19,8 @@ async def select_ac_1lvl_(cq: CallbackQuery, state: FSMContext):
     await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Выбери аккаунт(с которого копируем):', reply_markup=kbd.all_accounts_1lvl(user_id))
     await Select_account.account_id_1lvl.set()
 
-@dp.callback_query_handler(text='my_accounts', state = Select_account.account_1lvl_menu)
+
+@dp.callback_query_handler(text='my_accounts', state=Select_account.account_1lvl_menu)
 @admin
 async def select_ac_1lvl_(cq: CallbackQuery, state: FSMContext):
     msg = cq.message
@@ -30,10 +31,11 @@ async def select_ac_1lvl_(cq: CallbackQuery, state: FSMContext):
 
 
 @dp.callback_query_handler(Text(startswith='select_account_1lvl_'), state=[Select_account.account_id_1lvl,
-                                                                           Select_account.new_api_key, 
+                                                                           Select_account.new_api_key,
                                                                            Select_account.new_api_secret,
                                                                            Select_account.new_name,
-                                                                            ])
+                                                                           Select_account.account_id_2lvl,
+                                                                           ])
 @admin
 async def account_1lvl_menu(cq: CallbackQuery, state: FSMContext):
     msg = cq.message
@@ -51,7 +53,7 @@ async def account_1lvl_menu(cq: CallbackQuery, state: FSMContext):
 
 
 @dp.callback_query_handler(text='view_2lvl_accounts', state=[Select_account.account_1lvl_menu,
-                                                              Select_account.account_2lvl_menu])
+                                                             Select_account.account_2lvl_menu])
 @admin
 async def view_2lvl_accounts(cq: CallbackQuery, state: FSMContext):
     msg = cq.message
@@ -59,16 +61,16 @@ async def view_2lvl_accounts(cq: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     account_id_1lvl = data['account_id_1lvl']
     await state.update_data(page=0)
-    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Выбери аккаунт(с которого копируем):', reply_markup=kbd.all_accounts_2lvl(account_id_1lvl))
+    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Выбери аккаунт(с которого копируем):', reply_markup=kbd.all_accounts_2lvl(account_id_1lvl, back_ref=f'select_account_1lvl_{account_id_1lvl}'))
     await Select_account.account_id_2lvl.set()
 
 
 @dp.callback_query_handler(Text(startswith='select_account_2lvl_'), state=[Select_account.account_id_2lvl,
-                                                                           Select_account.new_api_key, 
+                                                                           Select_account.new_api_key,
                                                                            Select_account.new_api_secret,
                                                                            Select_account.new_name,
                                                                            Select_account.new_multiplicator,
-                                                                            ])
+                                                                           ])
 @admin
 async def select_ac_2lvl_(cq: CallbackQuery, state: FSMContext):
     msg = cq.message
@@ -118,4 +120,6 @@ async def replace_page_(cq: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     page_new = int(cq.data.split('replace_page_')[1])
     await state.update_data(page_2lvl=page_new)
-    await bot.edit_message_reply_markup(chat_id=user_id, message_id=msg.message_id, reply_markup=kbd.all_accounts_2lvl(account_1lvl_id=data['account_id_1lvl'], page=page_new))
+    await bot.edit_message_reply_markup(chat_id=user_id, message_id=msg.message_id,
+                                        reply_markup=kbd.all_accounts_2lvl(account_1lvl_id=data['account_id_1lvl'],
+                                                                           page=page_new, back_ref=f'select_account_1lvl_{data["account_id_1lvl"]}'))

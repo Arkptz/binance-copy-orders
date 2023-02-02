@@ -12,6 +12,7 @@ from DB import SessionDb, ClientOrderIdAssociationDb
 from config import log_path, SSL_CERT_FILE
 from threading import Thread
 from time import sleep
+import sys
 
 @dataclass
 class Account_2Lvl:
@@ -19,13 +20,22 @@ class Account_2Lvl:
     api_key: str
     secret: str
     multiplicator: float = 1
+    precisions: dict[str, int] | None = None
 
     def __post_init__(self) -> None:
         self.client = Client(self.api_key, self.secret,)
-                             #base_url='https://testnet.binancefuture.com')  # 
-                             #base_url="https://fapi.binance.com")
+        # base_url='https://testnet.binancefuture.com')  #
+        # base_url="https://fapi.binance.com")
         send_log_thr(
             f'Инициализация аккаунта {self.name_account} 2 уровня прошла успешно ')
+        self.update_precisions()
+
+    @catch_eroor
+    def update_precisions(self):
+        info: dict = self.client.exchange_info()['symbols']
+        self.precisions = {i['symbol']: i['quantityPrecision'] for i in info}
+        logging.info(
+            f'{self.name_account} -- Update precision -- {self.precisions}')
 
     @catch_eroor
     def new_order(self, order: Order):
@@ -34,7 +44,7 @@ class Account_2Lvl:
         kwargs = {'symbol': order.s,
                   'side': order.S,
                   'type': order.o,
-                  'quantity': round(order.q * self.multiplicator, 3), }
+                  'quantity': round(order.q * self.multiplicator, self.precisions[order.s]), }
         if order.R:
             kwargs['reduceOnly'] = True
         if order.ps:
@@ -44,7 +54,7 @@ class Account_2Lvl:
             kwargs['timeInForce'] = 'GTC'
         if order.o in need_sp + [OrderTypes.STOP]:
             kwargs['stopPrice'] = order.sp
-            kwargs['quantity'] = round(order.q * self.multiplicator, 3)
+            kwargs['quantity'] = round(order.q * self.multiplicator, self.precisions[order.s])
             if 'reduceOnly' in kwargs:
                 del kwargs['reduceOnly']
         if order.cp:
@@ -55,6 +65,8 @@ class Account_2Lvl:
         kwargs['workingType'] = order.wt
         response = self.client.new_order(**kwargs)
         open_order = OpenOrder(**response)
+        logging.info(
+            f'{self.name_account} -- Успешно открыли новый ордер {order.o}: {open_order}')
         send_log_thr(
             f'{self.name_account} -- Успешно открыли новый ордер {order.o}: {open_order}')
         ass = ClientOrderIdAssociationDb(
@@ -151,6 +163,8 @@ class Account_2Lvl:
                 orderId=ordId,
                 recvWindow=2000
             )
+            logging.info(
+                f'{self.name_account} -- Успешно закрыли ордер с orderId = {ordId}')
             logging.info(response)
             send_log_thr(
                 f'{self.name_account} -- Успешно закрыли ордер с orderId = {ordId}')
@@ -177,8 +191,10 @@ class Account_1Lvl:
     api_key: str
     secret: str
     account_2lvls: list[Account_2Lvl]
-    ws_client: CMFuturesWebsocketClient = CMFuturesWebsocketClient(stream_url='wss://fstream.binance.com')
-        #stream_url='wss://stream.binancefuture.com')
+    ws_client: CMFuturesWebsocketClient = CMFuturesWebsocketClient(
+        stream_url='wss://fstream.binance.com')
+    listen_key:str|None = None
+    # stream_url='wss://stream.binancefuture.com')
 
     def inizialize(self) -> None:
         os.environ['SSL_CERT_FILE'] = SSL_CERT_FILE
@@ -193,12 +209,19 @@ class Account_1Lvl:
         # config_logging(logging, logging.DEBUG,
         #                log_file=log_path + self.name_account+'.log')
         self.client = Client(self.api_key, secret=self.secret,)
-                             #base_url='https://testnet.binancefuture.com')
+        # base_url='https://testnet.binancefuture.com')
+        self.update_listen_key()
+        if not self.listen_key:
+            send_log_thr('Error - проверь правильность апи ключей и перезапусти бота')
+            sys.exit()
+        self.start_checks()
         send_log_thr(
             f'Инициализация аккаунта {self.name_account} 1 уровня прошла успешно ')
+
+    @catch_eroor
+    def update_listen_key(self):
         self.listen_key = self.client.new_listen_key()["listenKey"]
         send_log_thr(f'{self.name_account} -- Получен ключ для вебсокета')
-        self.start_checks()
 
     def start_checks(self):
         send_log_thr(f'{self.name_account} -- Начинаю сверку position_mode')
@@ -288,5 +311,5 @@ class Account_1Lvl:
                                  id=1,
                                  callback=self._handler)
         sleep(5)
-        logging.debug('statup')
+        logging.info('startup')
         send_log_thr(f'{self.name_account} -- Запуск вебсокета...')
