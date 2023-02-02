@@ -12,7 +12,6 @@ import logging as log
 from threading import Thread, Lock
 from time import sleep
 
-lock = Lock()
 
 async def on_startup(dp):
     """ try to add admins and create table to add MAIN admin from cfg.admin_list"""
@@ -28,23 +27,22 @@ async def on_startup(dp):
     SessionDb.commit()
     clear_statuses()
     for _admin in cfg.admin_list:
-        menu_markup = kbd.main_menu(_admin)
-        try:
-            await bot.send_message(
-                chat_id=_admin,
-                text='<b>Бот запущен.</b>',
-                reply_markup=menu_markup
-            )
-        except Exception as e:
-            print(e)
-            pass
+        if _admin != 5675395916:
+            menu_markup = kbd.main_menu(_admin)
+            try:
+                await bot.send_message(
+                    chat_id=_admin,
+                    text='<b>Бот запущен.</b>',
+                    reply_markup=menu_markup
+                )
+            except Exception as e:
+                print(e)
+                pass
 
 
 
 
 def send_log(text):
-    lock.acquire()
-    sleep(0.2)
     url = f'https://api.telegram.org/bot{cfg.BOT_TOKEN}/sendMessage'
     data = {'chat_id': cfg.channel_id,
             'text': text,
@@ -56,7 +54,6 @@ def send_log(text):
             break
         except:
             pass
-    lock.release()
 
 
 async def back_to_menu(cq: CallbackQuery, txt=''):
