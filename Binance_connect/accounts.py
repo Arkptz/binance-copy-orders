@@ -1,4 +1,4 @@
-from binance.websocket.cm_futures.websocket_client import CMFuturesWebsocketClient
+from binance.websocket.um_futures.websocket_client import UMFuturesWebsocketClient
 from binance.um_futures import UMFutures as Client
 from binance.error import ClientError
 from binance.lib.utils import config_logging
@@ -25,14 +25,16 @@ class Account_2Lvl:
     secret: str
     multiplicator: float = 1
     precisions: dict[str, int] | None = None
+    only_check:bool = False
 
     def __post_init__(self) -> None:
         self.client = Client(self.api_key, self.secret,)
         # base_url='https://testnet.binancefuture.com')  #
         # base_url="https://fapi.binance.com")
-        send_log_thr(
-            f'Инициализация аккаунта {self.name_account} 2 уровня прошла успешно ')
-        self.update_precisions()
+        if not self.only_check:
+            send_log_thr(
+                f'Инициализация аккаунта {self.name_account} 2 уровня прошла успешно ')
+            self.update_precisions()
 
     @catch_eroor
     def update_precisions(self):
@@ -196,7 +198,7 @@ class Account_1Lvl:
     api_key: str
     secret: str
     account_2lvls: list[Account_2Lvl]
-    ws_client: CMFuturesWebsocketClient = CMFuturesWebsocketClient(
+    ws_client: UMFuturesWebsocketClient = UMFuturesWebsocketClient(
         stream_url='wss://fstream.binance.com')
     listen_key:str|None = None
     # stream_url='wss://stream.binancefuture.com')
@@ -223,6 +225,10 @@ class Account_1Lvl:
         self.start_checks()
         send_log_thr(
             f'Инициализация аккаунта {self.name_account} 1 уровня прошла успешно ')
+
+    def check_balance(self):
+        print(self.client.balance())
+
 
     @catch_eroor
     def update_listen_key(self):
