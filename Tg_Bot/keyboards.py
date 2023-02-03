@@ -69,6 +69,8 @@ class Keyboards:
             text='⚒Поменять имя аккаунта', callback_data='replace_name'))
         if lvl1:
             markup.row(InlineKeyboardButton(
+                text='💸Проверить балансы', callback_data='check_balance'))
+            markup.row(InlineKeyboardButton(
                 text='Посмотреть аккаунты, на которые копируем', callback_data='view_2lvl_accounts'))
         else:
             markup.insert(InlineKeyboardButton(

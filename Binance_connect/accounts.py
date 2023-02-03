@@ -44,6 +44,14 @@ class Account_2Lvl:
         logging.info(
             f'{self.name_account} -- Update precision -- {self.precisions}')
 
+    def check_balance(self):
+        balance = self.client.balance()
+        print(balance)
+        _str = f'   {self.name_account} баланс:\n'
+        for i in balance:
+            _str += f'              {i["balance"]} {i["asset"]}\n'
+        return _str
+
     @catch_eroor
     def new_order(self, order: Order):
         need_sp = [OrderTypes.TAKE_PROFIT_MARKET,
@@ -203,7 +211,7 @@ class Account_1Lvl:
     listen_key:str|None = None
     # stream_url='wss://stream.binancefuture.com')
 
-    def inizialize(self) -> None:
+    def __post_init__(self):
         os.environ['SSL_CERT_FILE'] = SSL_CERT_FILE
         print(log_path + self.name_account+'.log')
         for handler in logging.root.handlers[:]:
@@ -216,6 +224,8 @@ class Account_1Lvl:
         # config_logging(logging, logging.DEBUG,
         #                log_file=log_path + self.name_account+'.log')
         self.client = Client(self.api_key, secret=self.secret,)
+
+    def inizialize(self) -> None:
         # base_url='https://testnet.binancefuture.com')
         self.update_listen_key()
         if not self.listen_key:
@@ -227,7 +237,13 @@ class Account_1Lvl:
             f'Инициализация аккаунта {self.name_account} 1 уровня прошла успешно ')
 
     def check_balance(self):
-        print(self.client.balance())
+        balance = self.client.balance()
+        print(balance)
+        _str = f'{self.name_account} баланс:\n'
+        for i in balance:
+            _str += f'      {i["balance"]} {i["asset"]}\n'
+        for acc in self.account_2lvls:
+            _str += acc.check_balance()
 
 
     @catch_eroor

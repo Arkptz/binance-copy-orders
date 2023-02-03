@@ -7,6 +7,7 @@ from ...states import Select_account, AddExpenditure
 from ...keyboards import kbd
 from Tg_Bot.handlers import back_to_menu
 from DB import AccountFirstLvlDb, SessionDb, AccountsDb
+from Binance_connect import Account_1Lvl, generate_account_to_work
 import traceback
 
 
@@ -51,6 +52,23 @@ async def account_1lvl_menu(cq: CallbackQuery, state: FSMContext):
                                      f' api_secret аккаунта: {au.api_secret}', reply_markup=kbd.account_markup(back_ref='my_accounts'))
     await Select_account.account_1lvl_menu.set()
 
+
+@dp.callback_query_handler(Text(startswith='check_balance'), state=Select_account.account_1lvl_menu)
+@admin
+async def check_balance(cq: CallbackQuery, state: FSMContext):
+    msg = cq.message
+    user_id = msg.chat.id
+    data = await state.get_data()
+    account_id_1lvl = data['account_id_1lvl']
+    au = SessionDb.get(AccountsDb, account_id_1lvl)
+    info = generate_account_to_work(au)
+    text = Account_1Lvl(*info).check_balance()
+    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id,
+                                text=f'О аккаунте:\n'
+                                     f' Имя акканта: {au.name_account}\n'
+                                     f' api_key аккаунта: {au.api_key}\n'
+                                     f' api_secret аккаунта: {au.api_secret}\n'+text, reply_markup=kbd.account_markup(back_ref='my_accounts'))
+    await Select_account.account_1lvl_menu.set()
 
 @dp.callback_query_handler(text='view_2lvl_accounts', state=[Select_account.account_1lvl_menu,
                                                              Select_account.account_2lvl_menu])
