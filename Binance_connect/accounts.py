@@ -53,6 +53,7 @@ class Account_2Lvl:
 
     @catch_eroor
     def new_order(self, order: Order):
+        
         need_sp = [OrderTypes.TAKE_PROFIT_MARKET,
                    OrderTypes.STOP_MARKET, OrderTypes.TAKE_PROFIT]
         kwargs = {'symbol': order.s,
@@ -77,6 +78,8 @@ class Account_2Lvl:
             kwargs['callbackRate'] = order.cr
             kwargs['activationPrice'] = order.AP
         kwargs['workingType'] = order.wt
+        logging.info(
+            f'{self.name_account} -- открываем ордер: {kwargs}')
         response = self.client.new_order(**kwargs)
         open_order = OpenOrder(**response)
         logging.info(
@@ -166,7 +169,7 @@ class Account_2Lvl:
 
     @catch_eroor
     def cancel_order(self, order: Order):
-        open_orders = self.get_open_orders(order.s)
+        #open_orders = self.get_open_orders(order.s)
         ass_dct = self.get_association_dict()
         if order.i in ass_dct:
             ordId = ass_dct[order.i]
@@ -182,10 +185,11 @@ class Account_2Lvl:
             logging.info(response)
             send_log_thr(
                 f'{self.name_account} -- Успешно закрыли ордер с orderId = {ordId}')
-            cl = SessionDb.query(ClientOrderIdAssociationDb).filter(
-                ClientOrderIdAssociationDb.lvl_1 == order.i).first()
-            SessionDb.delete(cl)
-            SessionDb.commit()
+            if order.cp:
+                cl = SessionDb.query(ClientOrderIdAssociationDb).filter(
+                    ClientOrderIdAssociationDb.lvl_1 == order.i).first()
+                SessionDb.delete(cl)
+                SessionDb.commit()
         else:
             txt = f'{self.name_account} -- {order} - Отсутсвует подходящий ордер для закрытия'
             logging.error(
@@ -212,6 +216,12 @@ class Account_1Lvl:
 
     def __post_init__(self):
         os.environ['SSL_CERT_FILE'] = SSL_CERT_FILE
+        # config_logging(logging, logging.DEBUG,
+        #                log_file=log_path + self.name_account+'.log')
+        self.client = Client(self.api_key, secret=self.secret,)
+
+    def inizialize(self) -> None:
+        # base_url='https://testnet.binancefuture.com')
         print(log_path + self.name_account+'.log')
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
@@ -220,12 +230,6 @@ class Account_1Lvl:
             format="[%(asctime)s] %(levelname)s [%(name)s.%(funcName)s:%(lineno)d] %(message)s",
             datefmt="%d/%b/%Y %H:%M:%S",
             filename=log_path + self.name_account+'.log', filemode='a')
-        # config_logging(logging, logging.DEBUG,
-        #                log_file=log_path + self.name_account+'.log')
-        self.client = Client(self.api_key, secret=self.secret,)
-
-    def inizialize(self) -> None:
-        # base_url='https://testnet.binancefuture.com')
         self.update_listen_key()
         if not self.listen_key:
             send_log_thr('Error - проверь правильность апи ключей и перезапусти бота')
