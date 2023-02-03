@@ -61,7 +61,7 @@ async def check_balance(cq: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     account_id_1lvl = data['account_id_1lvl']
     au = SessionDb.get(AccountsDb, account_id_1lvl)
-    info = generate_account_to_work(au)
+    info = generate_account_to_work(au, only_check=True)
     text = Account_1Lvl(*info).check_balance()
     await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id,
                                 text=f'О аккаунте:\n'
