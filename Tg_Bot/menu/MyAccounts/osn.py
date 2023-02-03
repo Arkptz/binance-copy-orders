@@ -71,6 +71,7 @@ async def check_balance(cq: CallbackQuery, state: FSMContext):
                                      f' api_secret аккаунта: {au.api_secret}\n'+text, reply_markup=kbd.account_markup(back_ref='my_accounts'))
     await Select_account.account_1lvl_menu.set()
 
+
 @dp.callback_query_handler(text='view_2lvl_accounts', state=[Select_account.account_1lvl_menu,
                                                              Select_account.account_2lvl_menu])
 @admin

@@ -244,6 +244,7 @@ class Account_1Lvl:
             _str += f'      {i["balance"]} {i["asset"]}\n'
         for acc in self.account_2lvls:
             _str += acc.check_balance()
+        return _str
 
 
     @catch_eroor
