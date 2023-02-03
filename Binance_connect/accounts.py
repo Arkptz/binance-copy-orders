@@ -48,7 +48,7 @@ class Account_2Lvl:
         balance = self.client.balance()
         _str = f'   {self.name_account} баланс:\n'
         for i in balance:
-            _str += f'              {i["balance"]} {i["asset"]}\n'
+            _str += f'              {float(i["balance"]) + float(i["crossWalletBalance"])} {i["asset"]}\n'
         return _str
 
     @catch_eroor
@@ -239,7 +239,7 @@ class Account_1Lvl:
         balance = self.client.balance()
         _str = f'{self.name_account} баланс:\n'
         for i in balance:
-            _str += f'      {i["balance"]} {i["asset"]}\n'
+            _str += f'      {float(i["balance"]) + float(i["crossWalletBalance"])}\n'
         for acc in self.account_2lvls:
             _str += acc.check_balance()
         return _str
