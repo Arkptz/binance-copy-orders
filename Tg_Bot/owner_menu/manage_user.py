@@ -22,10 +22,10 @@ async def owner_menu(msg: Message):
         text='<b>Owner меню:</b>',
         reply_markup=menu_markup
     )
-    
+
 @dp.message_handler(commands=['owner'], state=states)
 @owner
-async def owner_menu(msg: Message):
+async def owner_menu(msg: Message, state:FSMContext):
     user_id = msg.chat.id
     menu_markup = kbd.owner_menu()
     await bot.send_message(
@@ -33,7 +33,7 @@ async def owner_menu(msg: Message):
         text='<b>Owner меню:</b>',
         reply_markup=menu_markup
     )
-
+    await state.finish()
 
 @dp.callback_query_handler(text='owner_menu', state=states)
 @owner
