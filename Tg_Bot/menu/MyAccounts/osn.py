@@ -103,7 +103,7 @@ async def select_ac_2lvl_(cq: CallbackQuery, state: FSMContext):
                                 text=f'О аккаунте:\n'
                                      f' Имя акканта: {au.name_account}\n'
                                      f' api_key аккаунта: {au.api_key}\n'
-                                     f' api_secret аккаунта: {au.api_secret}\n' +txt2, reply_markup=kbd.account_markup(lvl1=False, back_ref='view_2lvl_accounts'))
+                                     f' api_secret аккаунта: {au.api_secret}' +txt2, reply_markup=kbd.account_markup(lvl1=False, back_ref='view_2lvl_accounts'))
     await Select_account.account_2lvl_menu.set()
 
 
