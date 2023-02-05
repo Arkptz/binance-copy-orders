@@ -98,11 +98,12 @@ async def select_ac_2lvl_(cq: CallbackQuery, state: FSMContext):
     await state.update_data(account_id_2lvl=account_id_2lvl, lvl=2)
     account = SessionDb.get(AccountsDb, account_id_2lvl)
     au = account
+    txt2 = f'\n    Мультипликатор аккаунта: {account.account_2lvl.multiplicator}'
     await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id,
                                 text=f'О аккаунте:\n'
                                      f' Имя акканта: {au.name_account}\n'
                                      f' api_key аккаунта: {au.api_key}\n'
-                                     f' api_secret аккаунта: {au.api_secret}', reply_markup=kbd.account_markup(lvl1=False, back_ref='view_2lvl_accounts'))
+                                     f' api_secret аккаунта: {au.api_secret}\n' +txt2, reply_markup=kbd.account_markup(lvl1=False, back_ref='view_2lvl_accounts'))
     await Select_account.account_2lvl_menu.set()
 
 
