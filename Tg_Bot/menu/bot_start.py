@@ -24,13 +24,17 @@ async def Bot_on(cq: CallbackQuery):
     user_id = msg.chat.id
     accs:list[AccountsDb] = SessionDb.query(AccountsDb).filter(
                 AccountsDb.account != None, AccountsDb.user_id == int(user_id)).all()
-    if not user_id in proc_list:
-        for i in accs:
-            send_log_thr(f'{i.name_account} -- Запуск процесса')
-            args = generate_account_to_work(i)
-            pr = mp.Process(target=process, args =[args])
-            pr.start()
-            proc_list[user_id][i.name_account] = pr
+    if user_id in proc_list:
+        for i in proc_list[user_id]:
+            proc_list[user_id][i].kill()
+        del proc_list[user_id]
+    
+    for i in accs:
+        send_log_thr(f'{i.name_account} -- Запуск процесса')
+        args = generate_account_to_work(i)
+        pr = mp.Process(target=process, args =[args])
+        pr.start()
+        proc_list[user_id][i.name_account] = pr
     
     bot_status = SessionDb.query(BotStatusDb).filter(
             BotStatusDb.user_id == user_id).first()
@@ -64,6 +68,10 @@ async def Bot_on(cq: CallbackQuery):
     user_id = int(cq.data.split('Bot_on_owner_')[1])
     accs:list[AccountsDb] = SessionDb.query(AccountsDb).filter(
                 AccountsDb.account != None, AccountsDb.user_id == int(user_id)).all()
+    if user_id in proc_list:
+        for i in proc_list[user_id]:
+            proc_list[user_id][i].kill()
+        del proc_list[user_id]
     for i in accs:
         send_log_thr(f'{i.name_account} -- Запуск процесса')
         args = generate_account_to_work(i)
