@@ -8,7 +8,7 @@ from .models import Base, engine, AccountsDb, AccountFirstLvlDb, AccountSecondLv
 
 
 Base.metadata.create_all(engine)
-SessionDb = sessionmaker(bind=engine)()
+SessionDb = sessionmaker(bind=engine, autoflush = True)()
 
 def clear_statuses():
     for i in SessionDb.query(AdminDb.user_id).all():

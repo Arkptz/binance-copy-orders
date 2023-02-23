@@ -86,8 +86,9 @@ class Account_2Lvl:
             f'{self.name_account} -- Успешно открыли новый ордер {order.o}: {open_order}')
         send_log_thr(
             f'{self.name_account} -- Успешно открыли новый ордер {order.o}: {open_order}')
+        name = f'{order.i}_{self.name_account}'
         ass = ClientOrderIdAssociationDb(
-            lvl_1=order.i, lvl_2=open_order.orderId)
+            lvl_1=name, lvl_2=open_order.orderId)
         SessionDb.add(ass)
         SessionDb.commit()
         logging.info(response)
@@ -171,9 +172,10 @@ class Account_2Lvl:
     def cancel_order(self, order: Order):
         #open_orders = self.get_open_orders(order.s)
         ass_dct = self.get_association_dict()
-        if order.i in ass_dct:
-            ordId = ass_dct[order.i]
-            logging.info(f'Closing order with orderId = {ordId}')
+        name = f'{order.i}_{self.name_account}'
+        if name in ass_dct:
+            ordId = ass_dct[name]
+            logging.info(f'{self.name_account} -- Closing order with orderId = {ordId}')
             # send_log_thr(f'{self.name_account} -- Закрываем ордер с orderId = {ordId}')
             response = self.client.cancel_order(
                 symbol=order.s,
@@ -187,7 +189,7 @@ class Account_2Lvl:
                 f'{self.name_account} -- Успешно закрыли ордер с orderId = {ordId}')
             if order.cp:
                 cl = SessionDb.query(ClientOrderIdAssociationDb).filter(
-                    ClientOrderIdAssociationDb.lvl_1 == order.i).first()
+                    ClientOrderIdAssociationDb.lvl_2 == ordId,).first()
                 SessionDb.delete(cl)
                 SessionDb.commit()
         else:
